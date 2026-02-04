@@ -56,11 +56,11 @@
   }
 
   #no {
-    background: #d3d3d3;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-  }
+  background: #d3d3d3;
+  position: absolute;
+  top: 10px;           /* start away from center */
+  left: 10px;          /* start away from center */
+}
 
   #result {
     display: none;
@@ -99,7 +99,7 @@
   const question = document.getElementById("question");
   const card = document.querySelector(".card");
 
-  function moveNoButton() {
+  function randomPositionFarFromYes() {
     const cardRect = card.getBoundingClientRect();
     const yesRect = yesBtn.getBoundingClientRect();
 
@@ -107,28 +107,31 @@
 
     do {
       x = Math.random() * (cardRect.width - noBtn.offsetWidth);
-      y = Math.random() * 100; // stays in upper area
+      y = Math.random() * (cardRect.height - noBtn.offsetHeight - 40);
 
-      const noRect = {
-        left: cardRect.left + x,
-        top: cardRect.top + y,
-        right: cardRect.left + x + noBtn.offsetWidth,
-        bottom: cardRect.top + y + noBtn.offsetHeight
-      };
+      const noCenterX = cardRect.left + x + noBtn.offsetWidth / 2;
+      const noCenterY = cardRect.top + y + noBtn.offsetHeight / 2;
 
-      const dx = (noRect.left + noRect.right)/2 - (yesRect.left + yesRect.right)/2;
-      const dy = (noRect.top + noRect.bottom)/2 - (yesRect.top + yesRect.bottom)/2;
-      distance = Math.sqrt(dx * dx + dy * dy);
+      const yesCenterX = (yesRect.left + yesRect.right) / 2;
+      const yesCenterY = (yesRect.top + yesRect.bottom) / 2;
 
-    } while (distance < 150); // minimum safe distance
+      distance = Math.hypot(
+        noCenterX - yesCenterX,
+        noCenterY - yesCenterY
+      );
+
+    } while (distance < 180); // NEVER close to YES
 
     noBtn.style.left = x + "px";
     noBtn.style.top = y + "px";
   }
 
-  // Mobile + desktop
-  noBtn.addEventListener("touchstart", moveNoButton);
-  noBtn.addEventListener("mouseover", moveNoButton);
+  // Move NO immediately on load (so it never starts in center)
+  window.addEventListener("load", randomPositionFarFromYes);
+
+  // Move on interaction
+  noBtn.addEventListener("mouseover", randomPositionFarFromYes);
+  noBtn.addEventListener("touchstart", randomPositionFarFromYes);
 
   yesBtn.addEventListener("click", () => {
     question.style.display = "none";
